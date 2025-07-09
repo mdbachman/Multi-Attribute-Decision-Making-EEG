@@ -1,6 +1,7 @@
 # Multi-Attribute-Decision-Making-EEG
 Code repository for this code. 
 Author: Matthew D. Bachman, matthewdbachman@gmail.com
+Licensed under the MIT license.
 Last update: July 9th, 2025
 
 These scripts were originally run on a PC running Windows 11 Enterprise with an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz and 64 GB of ram.
