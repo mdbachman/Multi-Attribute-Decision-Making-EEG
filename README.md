@@ -38,7 +38,7 @@ The following program/versions were also used in these scripts
 - scipy                         1.11.1
 - statsmodels                   0.14.0
 
-Here is the layout and organiztion of the scripts. Please note that you will likely need to change file/folder pathways to match your system.
+Here is the layout and organization of the scripts. Please note that you will likely need to change file/folder pathways to match your system.
 ### EEG Preprocessing
 - All takes place within "preprocessingEEGData.ipynb". This output is used for all future EEG analyses. Each participant may take 10-60 minutes or so to process, depending on your comfort with EEG processing.
 
@@ -51,7 +51,7 @@ Here is the layout and organiztion of the scripts. Please note that you will lik
 - From here it references: TemporalGeneralizationAnalyses_runScript.py
 - The head script is:  TemporalGeneralizationAnalyses_mainFunctions.py.  This script may take 30-60 minutes per participant.
 - This data is collated for statistical analysis and plotting in: TemporalGeneralizationAnalyses_plotResults.ipynb  This script should take only a few minutes to run.
-- 
+  
 ### Spatial Analyses
 - Also relies on the same data used for "temporally-specific decoders"
 - All analyses conducted in: SpatialAnalyses_plotResults.py. This script may take 5-10 minutes to run in its entirety.
