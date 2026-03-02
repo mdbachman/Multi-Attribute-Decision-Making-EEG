@@ -8,9 +8,10 @@ dataNLL = function(data, parameters){
   # parameters is a vector where the first element is the learning rate delta, and the
   # second element is temperature parameter tau
   # data is the combination of choices and outcomes observed for the agent Al
+  # the third element tests for general biases in participants' responses (i.e., accept vs reject)
   likelihood = NA
-  actionValues = parameters[1]*data$FaceValue + (1-parameters[1])*data$ColorValue
-  exponentiatedValue = exp(actionValues*parameters[2])
+  actionValues = parameters[3] + parameters[2]*(parameters[1]*data$FaceValue + (1-parameters[1])*data$ColorValue)
+  exponentiatedValue = exp(actionValues)
   exponentiatedValue[is.infinite(exponentiatedValue)] = .Machine$double.xmax
   likelihoodOfAccepting = exponentiatedValue/(exponentiatedValue + 1)
   likelihoodOfChoice = likelihoodOfAccepting
@@ -19,19 +20,21 @@ dataNLL = function(data, parameters){
 }
 
 subjNames = c(150:164,166:171,173:174,176:178,180:183,185:186,188:195) #
-
 nSubjects = length(subjNames)
 delta = c()
 tau = c()
+constant = c()
 for (subject in subjNames){
   subjectData = read.csv(paste(as.character(subject),".csv",sep = ""),na.strings=c("NaN"))
   missing <- is.na(subjectData$Resp)
   subjectData<- subset(subjectData,subset= !missing)  
-  results = optim(par = c(.5,.5), dataNLL, data = subjectData, method = 'L-BFGS', lower = c(0,0), upper = c(1,100))
+  results = optim(par = c(.5,.5,.5), dataNLL, data = subjectData, method = 'L-BFGS', lower = c(0,0,-Inf), upper = c(1,100,Inf))
   delta<-append(delta,results$par[1])
   tau<-append(tau,results$par[2])
+  constant<-append(constant,results$par[3])
 }
 t.test(delta,mu=.5,alternative='two.sided')
+t.test(constant,mu=0,alternative='two.sided')
 
 
 ## Creating soft-max predicted choices based on overall values, face values, and color values.
@@ -209,11 +212,54 @@ p2 <- ggplot(attribute_df, aes(x = Value, y = Mean, color = Condition, group = C
   theme_minimal(base_size = 14)
 
 
-
-
-
 # Arrange the two plots side by side
 grid.arrange(p1, p2, ncol = 2)
 
 # Optional: Save to EPS
 ggsave("ChoiceAccept_n40_v2_wSoftMax.eps", plot = grid.arrange(p1, p2, ncol = 2), device = "eps", width = 12, height = 6)
+
+## Supplementary Appendix 1 - learning rate
+# Note that we cannot supply the raw behavioral files due to identifying information, but here we have supplied the
+# processed data as well as the pipeline used to generate it.
+install.packages("R.matlab")
+library(R.matlab)
+subjNames = c(150:164,166:171,173:174,176:178,180:183,185:186,188:195) #
+nSubjects = length(subjNames)
+faceLearning_Block1 = c()
+faceLearning_Block2 = c()
+colorLearning_Block1 = c()
+colorLearning_Block2 = c()
+for (subject in subjNames){
+  # Data is read in as an array. Index 4 is "StartTime", and Index 18 is "EndTime"
+  F1<- readMat(paste('E:/Bachman/MADeEEG1/SubjectData/',as.character(subject),"/Data.",as.character(subject),".FaceTraining_1.mat",sep = ""))
+  F2<- readMat(paste('E:/Bachman/MADeEEG1/SubjectData/',as.character(subject),"/Data.",as.character(subject),".FaceTraining_2.mat",sep = ""))
+  C1<- readMat(paste('E:/Bachman/MADeEEG1/SubjectData/',as.character(subject),"/Data.",as.character(subject),".ColorTraining_1.mat",sep = ""))
+  C2<- readMat(paste('E:/Bachman/MADeEEG1/SubjectData/',as.character(subject),"/Data.",as.character(subject),".ColorTraining_2.mat",sep = ""))
+  faceLearning_Block1 <- append(faceLearning_Block1,F1$Data[[18,1,1]][[1]][[1]][1,1]  - F1$Data[[4,1,1]][[1]][[1]][1,1] )
+  faceLearning_Block2 <- append(faceLearning_Block2,F2$Data[[18,1,1]][[1]][[1]][1,1]  - F2$Data[[4,1,1]][[1]][[1]][1,1] )
+  colorLearning_Block1 <- append(colorLearning_Block1,C1$Data[[18,1,1]][[1]][[1]][1,1]  - C1$Data[[4,1,1]][[1]][[1]][1,1] )
+  colorLearning_Block2<- append(colorLearning_Block2,C2$Data[[18,1,1]][[1]][[1]][1,1]  - C2$Data[[4,1,1]][[1]][[1]][1,1] )
+}
+
+df <- data.frame(faceLearning_Block1, faceLearning_Block2, colorLearning_Block1, colorLearning_Block2)
+write.csv(df,"learningRates.csv",row.names = FALSE)
+
+# End of data processing
+
+# Start of analyses
+learningRates <- read.csv("learningRates.csv")
+
+# Average difference
+mean(learningRates$faceLearning_Block2 - learningRates$faceLearning_Block1)
+mean(learningRates$colorLearning_Block2 - learningRates$colorLearning_Block1)
+
+# Checking for differences in learning rates between colors and faces.
+t.test(learningRates$faceLearning_Block1,learningRates$colorLearning_Block1,paired= TRUE)
+t.test(learningRates$colorLearning_Block1,learningRates$colorLearning_Block2,paired= TRUE)
+t.test(learningRates$faceLearning_Block1,learningRates$faceLearning_Block2,paired= TRUE)
+t.test(learningRates$faceLearning_Block2,learningRates$colorLearning_Block2,paired= TRUE)
+
+
+# Correlating these differences with the weighting parameter. 
+result <- cor.test(delta,learningRates$faceLearning_Block2-learningRates$faceLearning_Block1,method="pearson")
+print(result)
