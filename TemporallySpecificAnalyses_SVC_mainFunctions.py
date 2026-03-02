@@ -572,7 +572,140 @@ def runClassification (subj,condition,timebin = 0,event = 'Stimulus',n_permutati
         figNum = getandsaveResults(subj,X,Y,'ColorValues',event,times,timebin, figNum,n_permutation=n_permutation,n_jobs=n_jobs,jitCorrect=jitCorrect,n_pseudo = 5)
 
         del X,Y       
+  
+    if condition == 'Value_no100' or condition == 'All':
+        # Define basic condition information
+        # Positive or negative values, but with |100| removed.
+        newValues = [0]*2
+        newValues[0] = [-70, -50, -40, -30, -20] # [-100,-70,-50]
+        newValues[1] = [ 70, 50, 40, 30, 20]# [-40,-30,-20]
+
+        
+        plt.figure(figNum)
+        figNum+=1
+        chan = epochs.ch_names.index('Pz')
+        ttime = np.linspace(times[0],times[1],AllEpochs.shape[2])
+        valList = []
+
+        # Set up label matrix (Y) while averaging together epochs for X.       
+        Y = np.empty((0))
+        for v in range(len(newValues)):
+            temp = AllEpochs[(behavData.Value == newValues[v][0])|(behavData.Value == newValues[v][1]) |(behavData.Value == newValues[v][2])|(behavData.Value == newValues[v][3])|(behavData.Value == newValues[v][4]),:,:]           #average trials
+            n_avg = 2
+            nChunk  = int(temp.shape[0]/n_avg)
+            if timebin == 0:
+                valueAvg = np.zeros((nChunk,temp.shape[1],temp.shape[2]))
+                for c in range(nChunk):
+                    valueAvg[c,:,:] = np.mean(temp[c*n_avg:(c+1)*n_avg,:,:],0)
+                    Y = np.append(Y,v)
+            else:
+                nBin   = int((times[1]-times[0])*1000/timebin) # number of bins
+                n_tpnt = int(timebin/(1000/epochs.info['sfreq']))
+                valueAvg= np.zeros((nChunk,temp.shape[1],nBin))
+                for c in range(nChunk):
+                    temp1 = np.mean(temp[c*n_avg:(c+1)*n_avg,:,:],0)
+                    for t in range(nBin):
+                        valueAvg[c,:,t] = np.mean(temp1[:,t*n_tpnt:(t+1)*n_tpnt],1)    
+                    Y = np.append(Y,v)
+            if v>0:
+                X = np.concatenate((X,valueAvg), axis = 0)
+            else:
+                X = valueAvg
+        print('Hello')
+        # ### Running discrimination analysis
+        figNum = getandsaveResults(subj,X,Y,'Value_no100',event,times,timebin, figNum,n_permutation=n_permutation,n_jobs=n_jobs,jitCorrect=jitCorrect,n_pseudo = 5)
+
+        del X,Y
+
+    if condition == 'Value_no70' or condition == 'All':
+        # Define basic condition information 
+        # Positive or negative values, but with |100| and |70| removed.
+        newValues = [0]*2
+        newValues[0] = [-50, -40, -30, -20] 
+        newValues[1] = [50, 40, 30, 20]
+
+
+        
+        plt.figure(figNum)
+        figNum+=1
+        chan = epochs.ch_names.index('Pz')
+        ttime = np.linspace(times[0],times[1],AllEpochs.shape[2])
+        valList = []
     
+        Y = np.empty((0))
+        for v in range(len(newValues)):
+            temp = AllEpochs[(behavData.Value == newValues[v][0])|(behavData.Value == newValues[v][1]) |(behavData.Value == newValues[v][2])|(behavData.Value == newValues[v][3]),:,:]         #average trials
+            n_avg = 2
+            nChunk  = int(temp.shape[0]/n_avg)
+            if timebin == 0:
+                valueAvg = np.zeros((nChunk,temp.shape[1],temp.shape[2]))
+                for c in range(nChunk):
+                    valueAvg[c,:,:] = np.mean(temp[c*n_avg:(c+1)*n_avg,:,:],0)
+                    Y = np.append(Y,v)
+            else:
+                nBin   = int((times[1]-times[0])*1000/timebin) # number of bins
+                n_tpnt = int(timebin/(1000/epochs.info['sfreq']))
+                valueAvg= np.zeros((nChunk,temp.shape[1],nBin))
+                for c in range(nChunk):
+                    temp1 = np.mean(temp[c*n_avg:(c+1)*n_avg,:,:],0)
+                    for t in range(nBin):
+                        valueAvg[c,:,t] = np.mean(temp1[:,t*n_tpnt:(t+1)*n_tpnt],1)    
+                    Y = np.append(Y,v)
+            if v>0:
+                X = np.concatenate((X,valueAvg), axis = 0)
+            else:
+                X = valueAvg
+        print('Hello')
+        # ### Running discrimination analysis
+        figNum = getandsaveResults(subj,X,Y,'Value_no70',event,times,timebin, figNum,n_permutation=n_permutation,n_jobs=n_jobs,jitCorrect=jitCorrect,n_pseudo = 5)
+
+        del X,Y
+
+    if condition == 'Value_no40' or condition == 'All':
+        # Define basic condition information
+        # Positive or negative values, but with |100|, |70| and |740| removed.
+        newValues = [0]*2
+        newValues[0] = [-50, -30, -20] 
+        newValues[1] = [ 50, 30, 20]
+
+
+        
+        plt.figure(figNum)
+        figNum+=1
+        chan = epochs.ch_names.index('Pz')
+        ttime = np.linspace(times[0],times[1],AllEpochs.shape[2])
+        valList = []
+       
+        # Set up label matrix (Y) while averaging together epochs for X.       
+        Y = np.empty((0))
+        for v in range(len(newValues)):
+            temp = AllEpochs[(behavData.Value == newValues[v][0])|(behavData.Value == newValues[v][1]) |(behavData.Value == newValues[v][2]),:,:]           #average trials
+            n_avg = 2
+            nChunk  = int(temp.shape[0]/n_avg)
+            if timebin == 0:
+                valueAvg = np.zeros((nChunk,temp.shape[1],temp.shape[2]))
+                for c in range(nChunk):
+                    valueAvg[c,:,:] = np.mean(temp[c*n_avg:(c+1)*n_avg,:,:],0)
+                    Y = np.append(Y,v)
+            else:
+                nBin   = int((times[1]-times[0])*1000/timebin) # number of bins
+                n_tpnt = int(timebin/(1000/epochs.info['sfreq']))
+                valueAvg= np.zeros((nChunk,temp.shape[1],nBin))
+                for c in range(nChunk):
+                    temp1 = np.mean(temp[c*n_avg:(c+1)*n_avg,:,:],0)
+                    for t in range(nBin):
+                        valueAvg[c,:,t] = np.mean(temp1[:,t*n_tpnt:(t+1)*n_tpnt],1)    
+                    Y = np.append(Y,v)
+            if v>0:
+                X = np.concatenate((X,valueAvg), axis = 0)
+            else:
+                X = valueAvg
+        print('Hello')
+        # ### Running discrimination analysis
+        figNum = getandsaveResults(subj,X,Y,'Value_no40',event,times,timebin, figNum,n_permutation=n_permutation,n_jobs=n_jobs,jitCorrect=jitCorrect,n_pseudo = 5)
+
+        del X,Y
+  
     #%%####------------------------- Response -----------------------------------------
     if condition == 'Response' or condition == 'All':
         # Define basic condition information
